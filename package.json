@@ -1,0 +1,20 @@
+{
+  "name": "blogbase",
+  "version": "1.0.0",
+  "description": "Solo article writing platform, with cross platform view and sharing.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/GbemigadEngineer/Blogbase.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/GbemigadEngineer/Blogbase/issues"
+  },
+  "homepage": "https://github.com/GbemigadEngineer/Blogbase#readme"
+}
