@@ -3,8 +3,10 @@ const Tag = require("../models/Tag");
 
 const DEFAULT_TAGS = [
   { name: "Sports", isDefault: true },
+  { name: "Technology", isDefault: true },
+  { name: "Football", isDefault: true },
   { name: "Manchester United", isDefault: true },
-  { name: "Politics", isDefault: true },
+  { name: "Global Politics", isDefault: true },
   { name: "Nigerian Politics", isDefault: true },
 ];
 
@@ -20,18 +22,22 @@ const seedAdmin = async () => {
       console.log(
         `✅ Admin account created (username: ${process.env.ADMIN_USERNAME || "admin"})`,
       );
+    } else {
+      console.log("✅ Admin account already exists");
     }
 
     // Seed default tags
     for (const tagData of DEFAULT_TAGS) {
       const exists = await Tag.findOne({ name: tagData.name });
       if (!exists) {
-        await Tag.create(tagData);
+        const tag = new Tag(tagData);
+        await tag.save();
       }
     }
     console.log("✅ Default tags seeded");
   } catch (err) {
     console.error("Seed error:", err.message);
+    console.error('Full error: ', err);
   }
 };
 

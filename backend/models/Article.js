@@ -53,20 +53,17 @@ const articleSchema = new mongoose.Schema(
 );
 
 // Auto-generate slug from title
-articleSchema.pre("save", function (next) {
+articleSchema.pre("save", function () {
   if (this.isModified("title")) {
     this.slug = slugify(this.title, { lower: true, strict: true });
   }
-  // Auto-generate excerpt from content if not provided
   if (!this.excerpt && this.content) {
     this.excerpt =
       this.content.replace(/<[^>]+>/g, "").substring(0, 297) + "...";
   }
-  // Set publishedAt when first published
   if (this.isModified("isPublished") && this.isPublished && !this.publishedAt) {
     this.publishedAt = new Date();
   }
-  next();
 });
 
 // Virtual: comment count
@@ -77,7 +74,6 @@ articleSchema.virtual("commentCount", {
   count: true,
 });
 
-articleSchema.index({ slug: 1 });
 articleSchema.index({ tag: 1, isPublished: 1 });
 articleSchema.index({ publishedAt: -1 });
 

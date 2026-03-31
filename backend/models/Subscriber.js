@@ -46,8 +46,6 @@ subscriberSchema.pre("save", function (next) {
   next();
 });
 
-subscriberSchema.index({ email: 1 });
-subscriberSchema.index({ unsubscribeToken: 1 });
 subscriberSchema.index({ tags: 1, isActive: 1 });
 
 module.exports = mongoose.model("Subscriber", subscriberSchema);

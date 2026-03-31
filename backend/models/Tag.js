@@ -25,7 +25,6 @@ const tagSchema = new mongoose.Schema(
 
 tagSchema.pre("save", function (next) {
   this.slug = slugify(this.name, { lower: true, strict: true });
-  next();
 });
 
 module.exports = mongoose.model("Tag", tagSchema);
