@@ -88,6 +88,9 @@ const getArticle = async (req, res, next) => {
 // @access  Private
 const createArticle = async (req, res, next) => {
   try {
+    console.log("Body:", req.body);
+    console.log("File:", req.file);
+
     const articleData = { ...req.body };
 
     if (req.file) {
