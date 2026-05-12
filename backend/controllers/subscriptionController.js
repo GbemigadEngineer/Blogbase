@@ -36,7 +36,7 @@ const subscribe = async (req, res, next) => {
       },
     );
 
-    await emailService.sendWelcomeEmail(subscriber);
+    // await emailService.sendWelcomeEmail(subscriber);
 
     res.status(201).json({
       success: true,
