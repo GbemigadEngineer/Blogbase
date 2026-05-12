@@ -212,6 +212,11 @@ const reactToArticle = async (req, res, next) => {
         .status(404)
         .json({ success: false, message: "Article not found" });
 
+    if (!article.isPublished) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Article not found" });
+    }
     const hashedIp = hashIp(req.ip);
     const alreadyLiked = article.likedBy.includes(hashedIp);
     const alreadyDisliked = article.dislikedBy.includes(hashedIp);
@@ -262,6 +267,17 @@ const reactToArticle = async (req, res, next) => {
 // @access  Public
 const shareArticle = async (req, res, next) => {
   try {
+    const article = await Article.findById(req.params.id);
+    if (!article) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Article not found" });
+    }
+    if (!article.isPublished) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Article not found" });
+    }
     await Article.findByIdAndUpdate(req.params.id, { $inc: { shares: 1 } });
     res.json({ success: true, message: "Share recorded" });
   } catch (err) {

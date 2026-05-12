@@ -16,12 +16,16 @@ const { upload } = require('../config/cloudinary');
 
 // Public
 router.get('/', getArticles);
+
+// Admin - must be before /:slug
+router.get('/admin/all', protect, getAdminArticles);
+
+// Public - this must come after /admin/all
 router.get('/:slug', getArticle);
 router.post('/:id/react', reactToArticle);
 router.post('/:id/share', shareArticle);
 
 // Admin
-router.get('/admin/all', protect, getAdminArticles);
 router.post('/', protect, upload.single('coverImage'), createArticle);
 router.put('/:id', protect, upload.single('coverImage'), updateArticle);
 router.patch('/:id/publish', protect, togglePublish);
