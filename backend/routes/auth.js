@@ -24,7 +24,7 @@ const { protect } = require("../middleware/auth");
  *                 example: admin
  *               password:
  *                 type: string
- *                 example: changeme123
+ *                 example: your_strong_password_here
  *     responses:
  *       200:
  *         description: Login successful
