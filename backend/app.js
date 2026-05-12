@@ -2,6 +2,8 @@ const express = require("express");
 const cors = require("cors");
 const helmet = require("helmet");
 const morgan = require("morgan");
+const swaggerUi = require("swagger-ui-express");
+const swaggerSpec = require("./config/swagger");
 
 const rateLimit = require("express-rate-limit");
 
@@ -53,6 +55,12 @@ if (process.env.NODE_ENV === "development") {
 app.get("/api/health", (req, res) => {
   res.json({ success: true, message: "Blogbase API is running 🚀" });
 });
+
+// ─── API Documentation (dev only) ───────────────────────────────────────────
+if (process.env.NODE_ENV === "development") {
+  app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+  console.log("📚 Swagger docs available at http://localhost:5000/api-docs");
+}
 
 // ─── Routes ──────────────────────────────────────────────────────────────────
 app.use("/api/auth", authRoutes);
