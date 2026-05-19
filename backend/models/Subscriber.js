@@ -43,7 +43,6 @@ subscriberSchema.pre("save", function (next) {
   if (!this.unsubscribeToken) {
     this.unsubscribeToken = crypto.randomBytes(32).toString("hex");
   }
-  next();
 });
 
 subscriberSchema.index({ tags: 1, isActive: 1 });
