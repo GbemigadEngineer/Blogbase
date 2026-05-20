@@ -1,9 +1,18 @@
-import { useEditor, EditorContent } from '@tiptap/react';
-import StarterKit from '@tiptap/starter-kit';
+import { useEffect } from "react";
+import { useEditor, EditorContent } from "@tiptap/react";
+import StarterKit from "@tiptap/starter-kit";
 import {
-  Bold, Italic, Heading1, Heading2, List, ListOrdered, Quote, Undo, Redo
-} from 'lucide-react';
-import PropTypes from 'prop-types';
+  Bold,
+  Italic,
+  Heading1,
+  Heading2,
+  List,
+  ListOrdered,
+  Quote,
+  Undo,
+  Redo,
+} from "lucide-react";
+import PropTypes from "prop-types";
 
 const MenuButton = ({ onClick, active, children, title }) => (
   <button
@@ -12,8 +21,8 @@ const MenuButton = ({ onClick, active, children, title }) => (
     onClick={onClick}
     className={`p-2 rounded-lg text-sm transition-colors ${
       active
-        ? 'bg-pink-500 text-white'
-        : 'text-gray-600 dark:text-gray-400 hover:bg-pink-50 dark:hover:bg-gray-800 hover:text-pink-500'
+        ? "bg-pink-500 text-white"
+        : "text-gray-600 dark:text-gray-400 hover:bg-pink-50 dark:hover:bg-gray-800 hover:text-pink-500"
     }`}
   >
     {children}
@@ -30,11 +39,23 @@ MenuButton.propTypes = {
 const RichTextEditor = ({ value, onChange }) => {
   const editor = useEditor({
     extensions: [StarterKit],
-    content: value || '',
+    content: value || "",
     onUpdate: ({ editor }) => {
       onChange(editor.getHTML());
     },
+    editorProps: {
+      attributes: {
+        class: "outline-none min-h-64",
+      },
+    },
   });
+
+  // Update editor when value loads from outside (e.g. edit page)
+  useEffect(() => {
+    if (editor && value && editor.getHTML() !== value) {
+      editor.commands.setContent(value);
+    }
+  }, [value, editor]);
 
   if (!editor) return null;
 
@@ -44,29 +65,33 @@ const RichTextEditor = ({ value, onChange }) => {
       <div className="flex flex-wrap items-center gap-1 p-2 border-b border-pink-100 dark:border-pink-900 bg-white dark:bg-gray-950">
         <MenuButton
           onClick={() => editor.chain().focus().toggleBold().run()}
-          active={editor.isActive('bold')}
+          active={editor.isActive("bold")}
           title="Bold"
         >
           <Bold size={16} />
         </MenuButton>
         <MenuButton
           onClick={() => editor.chain().focus().toggleItalic().run()}
-          active={editor.isActive('italic')}
+          active={editor.isActive("italic")}
           title="Italic"
         >
           <Italic size={16} />
         </MenuButton>
         <div className="w-px h-6 bg-pink-100 dark:bg-pink-900 mx-1" />
         <MenuButton
-          onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}
-          active={editor.isActive('heading', { level: 1 })}
+          onClick={() =>
+            editor.chain().focus().toggleHeading({ level: 1 }).run()
+          }
+          active={editor.isActive("heading", { level: 1 })}
           title="Heading 1"
         >
           <Heading1 size={16} />
         </MenuButton>
         <MenuButton
-          onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
-          active={editor.isActive('heading', { level: 2 })}
+          onClick={() =>
+            editor.chain().focus().toggleHeading({ level: 2 }).run()
+          }
+          active={editor.isActive("heading", { level: 2 })}
           title="Heading 2"
         >
           <Heading2 size={16} />
@@ -74,21 +99,21 @@ const RichTextEditor = ({ value, onChange }) => {
         <div className="w-px h-6 bg-pink-100 dark:bg-pink-900 mx-1" />
         <MenuButton
           onClick={() => editor.chain().focus().toggleBulletList().run()}
-          active={editor.isActive('bulletList')}
+          active={editor.isActive("bulletList")}
           title="Bullet List"
         >
           <List size={16} />
         </MenuButton>
         <MenuButton
           onClick={() => editor.chain().focus().toggleOrderedList().run()}
-          active={editor.isActive('orderedList')}
+          active={editor.isActive("orderedList")}
           title="Ordered List"
         >
           <ListOrdered size={16} />
         </MenuButton>
         <MenuButton
           onClick={() => editor.chain().focus().toggleBlockquote().run()}
-          active={editor.isActive('blockquote')}
+          active={editor.isActive("blockquote")}
           title="Blockquote"
         >
           <Quote size={16} />

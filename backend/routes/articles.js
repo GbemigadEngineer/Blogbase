@@ -10,6 +10,7 @@ const {
   deleteArticle,
   reactToArticle,
   shareArticle,
+  getArticleById,
 } = require("../controllers/articleController");
 const { protect } = require("../middleware/auth");
 const { upload } = require("../config/cloudinary");
@@ -98,6 +99,8 @@ router.get("/", getArticles);
  *               $ref: '#/components/schemas/Error'
  */
 router.get("/admin/all", protect, getAdminArticles);
+
+router.get("/admin/:id", protect, getArticleById); //
 
 /**
  * @swagger

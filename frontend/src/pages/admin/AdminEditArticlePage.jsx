@@ -24,20 +24,16 @@ const AdminEditArticlePage = () => {
     queryFn: () => api.get("/tags").then((res) => res.data),
   });
 
-  // Fetch article
-  const { data, isLoading } = useQuery({
+  // Fetch single article by ID from new endpoint
+  const { data: articleData, isLoading } = useQuery({
     queryKey: ["admin-article", id],
-    queryFn: () =>
-      api.get(`/articles/admin/all`).then((res) => {
-        const article = res.data.data.find((a) => a._id === id);
-        return { data: article };
-      }),
+    queryFn: () => api.get(`/articles/admin/${id}`).then((res) => res.data),
   });
 
-  // Populate form when data loads
+  // Populate form when article loads
   useEffect(() => {
-    if (data?.data) {
-      const article = data.data;
+    if (articleData?.data) {
+      const article = articleData.data;
       setTitle(article.title || "");
       setContent(article.content || "");
       setExcerpt(article.excerpt || "");
@@ -47,7 +43,7 @@ const AdminEditArticlePage = () => {
         setCoverPreview(article.coverImage.url);
       }
     }
-  }, [data]);
+  }, [articleData]);
 
   // Update mutation
   const updateMutation = useMutation({
@@ -224,7 +220,9 @@ const AdminEditArticlePage = () => {
           <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-1.5">
             Content <span className="text-pink-500">*</span>
           </label>
-          {content && <RichTextEditor value={content} onChange={setContent} />}
+          {content !== undefined && content !== null && (
+            <RichTextEditor value={content} onChange={setContent} />
+          )}
         </div>
 
         {error && <p className="text-red-500 text-sm">{error}</p>}

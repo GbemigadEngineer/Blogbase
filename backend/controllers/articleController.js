@@ -83,6 +83,24 @@ const getArticle = async (req, res, next) => {
   }
 };
 
+// Get single article by ID (admin)
+const getArticleById = async (req, res, next) => {
+  try {
+    const Article = require("../models/Article");
+    const article = await Article.findById(req.params.id).populate(
+      "tag",
+      "name slug",
+    );
+    if (!article)
+      return res
+        .status(404)
+        .json({ success: false, message: "Article not found" });
+    res.json({ success: true, data: article });
+  } catch (err) {
+    next(err);
+  }
+};
+
 // @desc    Create article
 // @route   POST /api/articles
 // @access  Private
@@ -282,6 +300,7 @@ const shareArticle = async (req, res, next) => {
 module.exports = {
   getArticles,
   getAdminArticles,
+  getArticleById,
   getArticle,
   createArticle,
   updateArticle,
