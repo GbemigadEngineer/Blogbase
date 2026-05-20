@@ -24,17 +24,19 @@ const subscribe = async (req, res, next) => {
         .json({ success: false, message: "One or more tags are invalid" });
     }
 
-    // Upsert: update existing or create new
-    const subscriber = await Subscriber.findOneAndUpdate(
-      { email: email.toLowerCase() },
-      { displayName, tags, isActive: true },
-      {
-        new: true,
-        upsert: true,
-        runValidators: true,
-        setDefaultsOnInsert: true,
-      },
-    );
+    // Check if subscriber already exists
+    let subscriber = await Subscriber.findOne({ email: email.toLowerCase() });
+
+    if (subscriber) {
+      // Update existing subscriber
+      subscriber.displayName = displayName;
+      subscriber.tags = tags;
+      subscriber.isActive = true;
+      await subscriber.save();
+    } else {
+      // Create new subscriber
+      subscriber = await Subscriber.create({ displayName, email, tags });
+    }
 
     // await emailService.sendWelcomeEmail(subscriber);
 
@@ -51,7 +53,6 @@ const subscribe = async (req, res, next) => {
     next(err);
   }
 };
-
 // @desc    Unsubscribe via token
 // @route   GET /api/subscriptions/unsubscribe/:token
 // @access  Public

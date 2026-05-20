@@ -83,13 +83,29 @@ const getArticle = async (req, res, next) => {
   }
 };
 
+// Get single article by ID (admin)
+const getArticleById = async (req, res, next) => {
+  try {
+    const Article = require("../models/Article");
+    const article = await Article.findById(req.params.id).populate(
+      "tag",
+      "name slug",
+    );
+    if (!article)
+      return res
+        .status(404)
+        .json({ success: false, message: "Article not found" });
+    res.json({ success: true, data: article });
+  } catch (err) {
+    next(err);
+  }
+};
+
 // @desc    Create article
 // @route   POST /api/articles
 // @access  Private
 const createArticle = async (req, res, next) => {
   try {
-
-
     const articleData = { ...req.body };
 
     if (req.file) {
@@ -210,51 +226,48 @@ const reactToArticle = async (req, res, next) => {
       return res
         .status(404)
         .json({ success: false, message: "Article not found" });
-
-    if (!article.isPublished) {
+    if (!article.isPublished)
       return res
         .status(404)
         .json({ success: false, message: "Article not found" });
-    }
+
     const hashedIp = hashIp(req.ip);
     const alreadyLiked = article.likedBy.includes(hashedIp);
     const alreadyDisliked = article.dislikedBy.includes(hashedIp);
 
-    let update = { $inc: {}, $push: {}, $pull: {} };
-
     if (type === "like") {
       if (alreadyLiked) {
-        update.$inc.likes = -1;
-        update.$pull.likedBy = hashedIp;
+        article.likes -= 1;
+        article.likedBy = article.likedBy.filter((ip) => ip !== hashedIp);
       } else {
-        update.$inc.likes = 1;
-        update.$push.likedBy = hashedIp;
+        article.likes += 1;
+        article.likedBy.push(hashedIp);
         if (alreadyDisliked) {
-          update.$inc.dislikes = -1;
-          update.$pull.dislikedBy = hashedIp;
+          article.dislikes -= 1;
+          article.dislikedBy = article.dislikedBy.filter(
+            (ip) => ip !== hashedIp,
+          );
         }
       }
     } else {
       if (alreadyDisliked) {
-        update.$inc.dislikes = -1;
-        update.$pull.dislikedBy = hashedIp;
+        article.dislikes -= 1;
+        article.dislikedBy = article.dislikedBy.filter((ip) => ip !== hashedIp);
       } else {
-        update.$inc.dislikes = 1;
-        update.$push.dislikedBy = hashedIp;
+        article.dislikes += 1;
+        article.dislikedBy.push(hashedIp);
         if (alreadyLiked) {
-          update.$inc.likes = -1;
-          update.$pull.likedBy = hashedIp;
+          article.likes -= 1;
+          article.likedBy = article.likedBy.filter((ip) => ip !== hashedIp);
         }
       }
     }
 
-    const updated = await Article.findByIdAndUpdate(req.params.id, update, {
-      new: true,
-    }).select("likes dislikes");
+    await article.save();
 
     res.json({
       success: true,
-      data: { likes: updated.likes, dislikes: updated.dislikes },
+      data: { likes: article.likes, dislikes: article.dislikes },
     });
   } catch (err) {
     next(err);
@@ -287,6 +300,7 @@ const shareArticle = async (req, res, next) => {
 module.exports = {
   getArticles,
   getAdminArticles,
+  getArticleById,
   getArticle,
   createArticle,
   updateArticle,
