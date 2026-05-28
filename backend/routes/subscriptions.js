@@ -2,6 +2,7 @@ const express = require("express");
 const router = express.Router();
 const {
   subscribe,
+  confirmSubscription,
   unsubscribe,
   verifySubscription,
   getSubscribers,
@@ -12,7 +13,7 @@ const { protect } = require("../middleware/auth");
  * @swagger
  * /subscriptions:
  *   post:
- *     summary: Subscribe to tags
+ *     summary: Subscribe to tags (sends verification email)
  *     tags: [Subscriptions]
  *     requestBody:
  *       required: true
@@ -38,18 +39,11 @@ const { protect } = require("../middleware/auth");
  *                 example: ["64f1a2b3c4d5e6f7a8b9c0d1"]
  *     responses:
  *       201:
- *         description: Subscribed successfully
+ *         description: Verification email sent
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                 message:
- *                   type: string
- *                 data:
- *                   $ref: '#/components/schemas/Subscriber'
+ *               $ref: '#/components/schemas/Success'
  *       400:
  *         description: Missing required fields or invalid tags
  *         content:
@@ -58,6 +52,35 @@ const { protect } = require("../middleware/auth");
  *               $ref: '#/components/schemas/Error'
  */
 router.post("/", subscribe);
+
+/**
+ * @swagger
+ * /subscriptions/confirm/{token}:
+ *   get:
+ *     summary: Confirm subscription via token from email
+ *     tags: [Subscriptions]
+ *     parameters:
+ *       - in: path
+ *         name: token
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Confirmation token sent in email
+ *     responses:
+ *       200:
+ *         description: Subscription confirmed successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Success'
+ *       404:
+ *         description: Invalid or expired confirmation link
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ */
+router.get("/confirm/:token", confirmSubscription);
 
 /**
  * @swagger
@@ -92,7 +115,7 @@ router.get("/unsubscribe/:token", unsubscribe);
  * @swagger
  * /subscriptions/verify:
  *   post:
- *     summary: Verify if an email is an active subscriber
+ *     summary: Verify if an email is a confirmed active subscriber
  *     tags: [Subscriptions]
  *     requestBody:
  *       required: true

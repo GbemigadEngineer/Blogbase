@@ -13,6 +13,7 @@ import AdminTagsPage from "./pages/admin/AdminTagsPage";
 import AdminAnalyticsPage from "./pages/admin/AdminAnalyticsPage";
 import ProtectedRoute from "./components/layout/ProtectedRoute";
 import NotFoundPage from "./pages/NotFoundPage";
+import ConfirmPage from './pages/ConfirmPage';
 
 const App = () => {
   return (
@@ -23,6 +24,7 @@ const App = () => {
         <Route path="articles/:slug" element={<ArticlePage />} />
         <Route path="subscribe" element={<SubscribePage />} />
         <Route path="unsubscribe/:token" element={<SubscribePage />} />
+        <Route path="confirm/:token" element={<ConfirmPage />} />
       </Route>
 
       {/* Admin auth */}
