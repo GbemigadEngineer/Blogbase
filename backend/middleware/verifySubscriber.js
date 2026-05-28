@@ -12,12 +12,14 @@ const verifySubscriber = async (req, res, next) => {
   const subscriber = await Subscriber.findOne({
     email: email.toLowerCase(),
     isActive: true,
+    confirmedAt: { $ne: null },
   });
 
   if (!subscriber) {
     return res.status(403).json({
       success: false,
-      message: "You must be a subscriber to comment. Please subscribe first.",
+      message:
+        "You must be a confirmed subscriber to comment. Please check your email for the confirmation link.",
     });
   }
 

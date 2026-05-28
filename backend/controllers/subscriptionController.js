@@ -2,7 +2,7 @@ const Subscriber = require("../models/Subscriber");
 const Tag = require("../models/Tag");
 const emailService = require("../services/emailService");
 
-// @desc    Subscribe
+// @desc    Subscribe (save unconfirmed, send verification email)
 // @route   POST /api/subscriptions
 // @access  Public
 const subscribe = async (req, res, next) => {
@@ -16,7 +16,6 @@ const subscribe = async (req, res, next) => {
       });
     }
 
-    // Validate tags exist
     const validTags = await Tag.find({ _id: { $in: tags } });
     if (validTags.length !== tags.length) {
       return res
@@ -24,35 +23,94 @@ const subscribe = async (req, res, next) => {
         .json({ success: false, message: "One or more tags are invalid" });
     }
 
-    // Check if subscriber already exists
     let subscriber = await Subscriber.findOne({ email: email.toLowerCase() });
 
     if (subscriber) {
-      // Update existing subscriber
-      subscriber.displayName = displayName;
-      subscriber.tags = tags;
-      subscriber.isActive = true;
-      await subscriber.save();
-    } else {
-      // Create new subscriber
-      subscriber = await Subscriber.create({ displayName, email, tags });
+      if (subscriber.confirmedAt) {
+        // Already confirmed — just update their tags
+        subscriber.displayName = displayName;
+        subscriber.tags = tags;
+        subscriber.isActive = true;
+        await subscriber.save();
+        return res.status(200).json({
+          success: true,
+          message: "Subscription updated successfully.",
+        });
+      } else {
+        // Exists but not confirmed — resend verification
+        subscriber.displayName = displayName;
+        subscriber.tags = tags;
+        await subscriber.save();
+        await emailService.sendVerificationEmail(subscriber);
+        return res.status(200).json({
+          success: true,
+          message: "Verification email resent. Please check your inbox.",
+        });
+      }
     }
 
-    // await emailService.sendWelcomeEmail(subscriber);
+    // New subscriber — save as unconfirmed
+    subscriber = await Subscriber.create({
+      displayName,
+      email,
+      tags,
+      isActive: false,
+      confirmedAt: null,
+    });
+
+    await emailService.sendVerificationEmail(subscriber);
 
     res.status(201).json({
       success: true,
-      message: "Subscribed successfully! You can now comment on articles.",
-      data: {
-        displayName: subscriber.displayName,
-        email: subscriber.email,
-        tags: subscriber.tags,
-      },
+      message:
+        "Almost there! Please check your email to confirm your subscription.",
     });
   } catch (err) {
     next(err);
   }
 };
+
+// @desc    Confirm subscription via token
+// @route   GET /api/subscriptions/confirm/:token
+// @access  Public
+const confirmSubscription = async (req, res, next) => {
+  try {
+    const subscriber = await Subscriber.findOne({
+      confirmToken: req.params.token,
+    });
+
+    if (!subscriber) {
+      return res
+        .status(404)
+        .json({
+          success: false,
+          message: "Invalid or expired confirmation link",
+        });
+    }
+
+    if (subscriber.confirmedAt) {
+      return res
+        .status(200)
+        .json({ success: true, message: "Subscription already confirmed." });
+    }
+
+    subscriber.confirmedAt = new Date();
+    subscriber.isActive = true;
+    subscriber.confirmToken = null;
+    await subscriber.save();
+
+    // Send welcome email
+    await emailService.sendWelcomeEmail(subscriber);
+
+    res.json({
+      success: true,
+      message: "Subscription confirmed! Welcome to Blogbase.",
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
 // @desc    Unsubscribe via token
 // @route   GET /api/subscriptions/unsubscribe/:token
 // @access  Public
@@ -94,6 +152,7 @@ const verifySubscription = async (req, res, next) => {
     const subscriber = await Subscriber.findOne({
       email: email.toLowerCase(),
       isActive: true,
+      confirmedAt: { $ne: null },
     }).select("displayName email tags");
 
     if (!subscriber) {
@@ -117,7 +176,7 @@ const getSubscribers = async (req, res, next) => {
   try {
     const subscribers = await Subscriber.find()
       .populate("tags", "name")
-      .select("-unsubscribeToken")
+      .select("-unsubscribeToken -confirmToken")
       .sort({ createdAt: -1 });
 
     res.json({ success: true, count: subscribers.length, data: subscribers });
@@ -126,4 +185,10 @@ const getSubscribers = async (req, res, next) => {
   }
 };
 
-module.exports = { subscribe, unsubscribe, verifySubscription, getSubscribers };
+module.exports = {
+  subscribe,
+  confirmSubscription,
+  unsubscribe,
+  verifySubscription,
+  getSubscribers,
+};

@@ -25,23 +25,29 @@ const subscriberSchema = new mongoose.Schema(
     ],
     isActive: {
       type: Boolean,
-      default: true,
+      default: false, // false until email is confirmed
     },
     unsubscribeToken: {
       type: String,
       unique: true,
     },
+    confirmToken: {
+      type: String,
+    },
     confirmedAt: {
       type: Date,
+      default: null,
     },
   },
   { timestamps: true },
 );
 
-// Generate unsubscribe token before saving
-subscriberSchema.pre("save", function (next) {
+subscriberSchema.pre("save", function () {
   if (!this.unsubscribeToken) {
     this.unsubscribeToken = crypto.randomBytes(32).toString("hex");
+  }
+  if (!this.confirmToken) {
+    this.confirmToken = crypto.randomBytes(32).toString("hex");
   }
 });
 

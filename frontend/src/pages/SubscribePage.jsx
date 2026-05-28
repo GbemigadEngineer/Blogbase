@@ -8,8 +8,9 @@ const SubscribePage = () => {
   const { token } = useParams();
   const [displayName, setDisplayName] = useState("");
   const [email, setEmail] = useState("");
+  const [submittedEmail, setSubmittedEmail] = useState("");
   const [selectedTags, setSelectedTags] = useState([]);
-  const [success, setSuccess] = useState("");
+  const [success, setSuccess] = useState(false);
   const [error, setError] = useState("");
 
   // Fetch tags
@@ -34,9 +35,8 @@ const SubscribePage = () => {
   const subscribeMutation = useMutation({
     mutationFn: (data) => api.post("/subscriptions", data),
     onSuccess: () => {
-      setSuccess(
-        "You are now subscribed! You can comment on articles using your email.",
-      );
+      setSuccess(true);
+      setSubmittedEmail(email);
       setError("");
       setDisplayName("");
       setEmail("");
@@ -44,10 +44,9 @@ const SubscribePage = () => {
     },
     onError: (err) => {
       setError(
-        err.response?.data?.message ||
-          "Something went wrong. Please try again.",
+        err.response?.data?.message || "Something went wrong. Please try again."
       );
-      setSuccess("");
+      setSuccess(false);
     },
   });
 
@@ -55,7 +54,7 @@ const SubscribePage = () => {
     setSelectedTags((prev) =>
       prev.includes(tagId)
         ? prev.filter((id) => id !== tagId)
-        : [...prev, tagId],
+        : [...prev, tagId]
     );
   };
 
@@ -84,10 +83,7 @@ const SubscribePage = () => {
             <p className="text-gray-500 mb-6">
               You have been successfully unsubscribed from Blogbase.
             </p>
-            <Link
-              to="/"
-              className="text-pink-500 font-semibold hover:underline"
-            >
+            <Link to="/" className="text-pink-500 font-semibold hover:underline">
               Back to home
             </Link>
           </div>
@@ -97,10 +93,7 @@ const SubscribePage = () => {
             <p className="text-red-500 mb-4">
               Invalid or expired unsubscribe link.
             </p>
-            <Link
-              to="/"
-              className="text-pink-500 font-semibold hover:underline"
-            >
+            <Link to="/" className="text-pink-500 font-semibold hover:underline">
               Back to home
             </Link>
           </div>
@@ -133,14 +126,23 @@ const SubscribePage = () => {
           <div className="text-center py-6">
             <CheckCircle size={48} className="text-pink-500 mx-auto mb-4" />
             <h3 className="font-display font-black text-xl text-gray-900 dark:text-white mb-2">
-              You&apos;re in!
+              Check your email!
             </h3>
-            <p className="text-gray-500 text-sm mb-6">{success}</p>
+            <p className="text-gray-500 text-sm mb-2">
+              We sent a confirmation link to
+            </p>
+            <p className="font-bold text-gray-900 dark:text-white text-sm mb-6">
+              {submittedEmail}
+            </p>
+            <p className="text-gray-400 text-xs mb-6">
+              Click the link in the email to activate your subscription.
+              Check your spam folder if you do not see it.
+            </p>
             <Link
               to="/"
               className="inline-block bg-pink-500 hover:bg-pink-600 text-white font-bold px-6 py-2.5 rounded-full transition-colors text-sm"
             >
-              Start reading
+              Back to home
             </Link>
           </div>
         ) : (
