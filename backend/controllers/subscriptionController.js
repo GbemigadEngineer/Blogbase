@@ -35,7 +35,8 @@ const subscribe = async (req, res, next) => {
         await subscriber.save();
         return res.status(200).json({
           success: false,
-          message: "This email is already subscribed. Your preferences have been updated.",
+          message:
+            "This email is already subscribed. Your preferences have been updated.",
         });
       } else {
         // Exists but not confirmed — resend verification
@@ -67,13 +68,17 @@ const subscribe = async (req, res, next) => {
 
     try {
       await emailService.sendVerificationEmail(subscriber);
+      console.log("Email sent successfully");
     } catch (emailErr) {
       console.error("Verification email failed:", emailErr.message);
     }
+    console.log("About to send response to frontend");
+    console.log("Sending response now");
 
     res.status(201).json({
       success: true,
-      message: "Almost there! Please check your email to confirm your subscription.",
+      message:
+        "Almost there! Please check your email to confirm your subscription.",
     });
   } catch (err) {
     next(err);
