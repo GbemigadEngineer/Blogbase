@@ -18,30 +18,37 @@ const subscribe = async (req, res, next) => {
 
     const validTags = await Tag.find({ _id: { $in: tags } });
     if (validTags.length !== tags.length) {
-      return res
-        .status(400)
-        .json({ success: false, message: "One or more tags are invalid" });
+      return res.status(400).json({
+        success: false,
+        message: "One or more tags are invalid",
+      });
     }
 
     let subscriber = await Subscriber.findOne({ email: email.toLowerCase() });
 
     if (subscriber) {
       if (subscriber.confirmedAt) {
-        // Already confirmed — just update their tags
+        // Already confirmed — update their preferences
         subscriber.displayName = displayName;
         subscriber.tags = tags;
         subscriber.isActive = true;
         await subscriber.save();
         return res.status(200).json({
-          success: true,
-          message: "Subscription updated successfully.",
+          success: false,
+          message: "This email is already subscribed. Your preferences have been updated.",
         });
       } else {
         // Exists but not confirmed — resend verification
         subscriber.displayName = displayName;
         subscriber.tags = tags;
         await subscriber.save();
-        await emailService.sendVerificationEmail(subscriber);
+
+        try {
+          await emailService.sendVerificationEmail(subscriber);
+        } catch (emailErr) {
+          console.error("Verification email failed:", emailErr.message);
+        }
+
         return res.status(200).json({
           success: true,
           message: "Verification email resent. Please check your inbox.",
@@ -58,12 +65,15 @@ const subscribe = async (req, res, next) => {
       confirmedAt: null,
     });
 
-    await emailService.sendVerificationEmail(subscriber);
+    try {
+      await emailService.sendVerificationEmail(subscriber);
+    } catch (emailErr) {
+      console.error("Verification email failed:", emailErr.message);
+    }
 
     res.status(201).json({
       success: true,
-      message:
-        "Almost there! Please check your email to confirm your subscription.",
+      message: "Almost there! Please check your email to confirm your subscription.",
     });
   } catch (err) {
     next(err);
@@ -80,18 +90,17 @@ const confirmSubscription = async (req, res, next) => {
     });
 
     if (!subscriber) {
-      return res
-        .status(404)
-        .json({
-          success: false,
-          message: "Invalid or expired confirmation link",
-        });
+      return res.status(404).json({
+        success: false,
+        message: "Invalid or expired confirmation link",
+      });
     }
 
     if (subscriber.confirmedAt) {
-      return res
-        .status(200)
-        .json({ success: true, message: "Subscription already confirmed." });
+      return res.status(200).json({
+        success: true,
+        message: "Subscription already confirmed.",
+      });
     }
 
     subscriber.confirmedAt = new Date();
@@ -99,8 +108,11 @@ const confirmSubscription = async (req, res, next) => {
     subscriber.confirmToken = null;
     await subscriber.save();
 
-    // Send welcome email
-    await emailService.sendWelcomeEmail(subscriber);
+    try {
+      await emailService.sendWelcomeEmail(subscriber);
+    } catch (emailErr) {
+      console.error("Welcome email failed:", emailErr.message);
+    }
 
     res.json({
       success: true,
@@ -121,9 +133,10 @@ const unsubscribe = async (req, res, next) => {
     });
 
     if (!subscriber) {
-      return res
-        .status(404)
-        .json({ success: false, message: "Invalid unsubscribe link" });
+      return res.status(404).json({
+        success: false,
+        message: "Invalid unsubscribe link",
+      });
     }
 
     subscriber.isActive = false;
@@ -144,10 +157,12 @@ const unsubscribe = async (req, res, next) => {
 const verifySubscription = async (req, res, next) => {
   try {
     const { email } = req.body;
-    if (!email)
-      return res
-        .status(400)
-        .json({ success: false, message: "Email is required" });
+    if (!email) {
+      return res.status(400).json({
+        success: false,
+        message: "Email is required",
+      });
+    }
 
     const subscriber = await Subscriber.findOne({
       email: email.toLowerCase(),
@@ -179,7 +194,11 @@ const getSubscribers = async (req, res, next) => {
       .select("-unsubscribeToken -confirmToken")
       .sort({ createdAt: -1 });
 
-    res.json({ success: true, count: subscribers.length, data: subscribers });
+    res.json({
+      success: true,
+      count: subscribers.length,
+      data: subscribers,
+    });
   } catch (err) {
     next(err);
   }
