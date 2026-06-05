@@ -34,27 +34,32 @@ const SubscribePage = () => {
   // Subscribe mutation
   const subscribeMutation = useMutation({
     mutationFn: (data) => api.post("/subscriptions", data),
-    onSuccess: () => {
-      setSuccess(true);
-      setSubmittedEmail(email);
-      setError("");
-      setDisplayName("");
-      setEmail("");
-      setSelectedTags([]);
+    onSuccess: (res) => {
+      if (res.data.success) {
+        setSuccess(true);
+        setSubmittedEmail(email);
+        setError("");
+        setDisplayName("");
+        setEmail("");
+        setSelectedTags([]);
+      } else {
+        setError(res.data.message);
+        setSuccess(false);
+      }
     },
     onError: (err) => {
       setError(
-        err.response?.data?.message || "Something went wrong. Please try again."
+        err.response?.data?.message ||
+          "Something went wrong. Please try again.",
       );
       setSuccess(false);
     },
   });
-
   const toggleTag = (tagId) => {
     setSelectedTags((prev) =>
       prev.includes(tagId)
         ? prev.filter((id) => id !== tagId)
-        : [...prev, tagId]
+        : [...prev, tagId],
     );
   };
 
@@ -83,7 +88,10 @@ const SubscribePage = () => {
             <p className="text-gray-500 mb-6">
               You have been successfully unsubscribed from Blogbase.
             </p>
-            <Link to="/" className="text-pink-500 font-semibold hover:underline">
+            <Link
+              to="/"
+              className="text-pink-500 font-semibold hover:underline"
+            >
               Back to home
             </Link>
           </div>
@@ -93,7 +101,10 @@ const SubscribePage = () => {
             <p className="text-red-500 mb-4">
               Invalid or expired unsubscribe link.
             </p>
-            <Link to="/" className="text-pink-500 font-semibold hover:underline">
+            <Link
+              to="/"
+              className="text-pink-500 font-semibold hover:underline"
+            >
               Back to home
             </Link>
           </div>
@@ -135,8 +146,8 @@ const SubscribePage = () => {
               {submittedEmail}
             </p>
             <p className="text-gray-400 text-xs mb-6">
-              Click the link in the email to activate your subscription.
-              Check your spam folder if you do not see it.
+              Click the link in the email to activate your subscription. Check
+              your spam folder if you do not see it.
             </p>
             <Link
               to="/"
