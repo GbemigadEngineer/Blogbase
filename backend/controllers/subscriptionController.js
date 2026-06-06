@@ -28,7 +28,7 @@ const subscribe = async (req, res, next) => {
 
     if (subscriber) {
       if (subscriber.confirmedAt) {
-        // Already confirmed — update their preferences
+        // Already confirmed — update preferences
         subscriber.displayName = displayName;
         subscriber.tags = tags;
         subscriber.isActive = true;
@@ -39,21 +39,23 @@ const subscribe = async (req, res, next) => {
             "This email is already subscribed. Your preferences have been updated.",
         });
       } else {
-        // Exists but not confirmed — resend verification
+        // Exists but not confirmed — update and resend
         subscriber.displayName = displayName;
         subscriber.tags = tags;
         await subscriber.save();
 
-        try {
-          await emailService.sendVerificationEmail(subscriber);
-        } catch (emailErr) {
-          console.error("Verification email failed:", emailErr.message);
-        }
-
-        return res.status(200).json({
+        // Respond immediately, send email in background
+        res.status(200).json({
           success: true,
           message: "Verification email resent. Please check your inbox.",
         });
+
+        // Fire and forget
+        emailService.sendVerificationEmail(subscriber).catch((err) => {
+          console.error("Resend verification email failed:", err.message);
+        });
+
+        return;
       }
     }
 
@@ -66,25 +68,21 @@ const subscribe = async (req, res, next) => {
       confirmedAt: null,
     });
 
-    try {
-      await emailService.sendVerificationEmail(subscriber);
-      console.log("Email sent successfully");
-    } catch (emailErr) {
-      console.error("Verification email failed:", emailErr.message);
-    }
-    console.log("About to send response to frontend");
-    console.log("Sending response now");
-
+    // Respond immediately, send email in background
     res.status(201).json({
       success: true,
       message:
         "Almost there! Please check your email to confirm your subscription.",
     });
+
+    // Fire and forget
+    emailService.sendVerificationEmail(subscriber).catch((err) => {
+      console.error("Verification email failed:", err.message);
+    });
   } catch (err) {
     next(err);
   }
 };
-
 // @desc    Confirm subscription via token
 // @route   GET /api/subscriptions/confirm/:token
 // @access  Public
@@ -113,15 +111,15 @@ const confirmSubscription = async (req, res, next) => {
     subscriber.confirmToken = null;
     await subscriber.save();
 
-    try {
-      await emailService.sendWelcomeEmail(subscriber);
-    } catch (emailErr) {
-      console.error("Welcome email failed:", emailErr.message);
-    }
-
+    // Respond immediately
     res.json({
       success: true,
       message: "Subscription confirmed! Welcome to Blogbase.",
+    });
+
+    // Fire and forget
+    emailService.sendWelcomeEmail(subscriber).catch((err) => {
+      console.error("Welcome email failed:", err.message);
     });
   } catch (err) {
     next(err);
