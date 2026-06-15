@@ -1,69 +1,20 @@
-const nodemailer = require("nodemailer");
-const Subscriber = require("../models/Subscriber");
+const { Resend } = require('resend');
+const Subscriber = require('../models/Subscriber');
 
-const transporter = nodemailer.createTransport({
-  host: process.env.EMAIL_HOST,
-  port: process.env.EMAIL_PORT,
-  secure: true,
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS,
-  },
-});
-transporter.verify((error, success) => {
-  if (error) {
-    console.error("SMTP connection error:", error);
-  } else {
-    console.log("SMTP server is ready to send emails");
-  }
-});
-const FROM = `"${process.env.EMAIL_FROM_NAME || "Blogbase"}" <${process.env.EMAIL_FROM}>`;
+const resend = new Resend(process.env.RESEND_API_KEY);
+
+const FROM = `${process.env.EMAIL_FROM_NAME || 'Blogbase'} <${process.env.EMAIL_FROM}>`;
 
 // ─── Verification Email ───────────────────────────────────────────────────────
-// const sendVerificationEmail = async (subscriber) => {
-//   const confirmUrl = `${process.env.CLIENT_URL}/confirm/${subscriber.confirmToken}`;
-
-//   await transporter.sendMail({
-//     from: FROM,
-//     to: subscriber.email,
-//     subject: "Confirm your Blogbase subscription",
-//     html: `
-//       <div style="font-family: sans-serif; max-width: 600px; margin: auto; padding: 32px;">
-//         <h2 style="color: #111; font-size: 24px; margin-bottom: 8px;">
-//           Confirm your subscription
-//         </h2>
-//         <p style="color: #666; margin-bottom: 24px;">
-//           Hey ${subscriber.displayName}, thanks for subscribing to Blogbase.
-//           Click the button below to confirm your email address and activate your subscription.
-//         </p>
-//         <a href="${confirmUrl}" style="
-//           display: inline-block;
-//           padding: 12px 24px;
-//           background: #ec4899;
-//           color: white;
-//           text-decoration: none;
-//           border-radius: 999px;
-//           font-weight: bold;
-//           font-size: 14px;
-//         ">Confirm Subscription</a>
-//         <p style="color: #999; font-size: 12px; margin-top: 32px;">
-//           If you didn't subscribe to Blogbase, you can safely ignore this email.
-//           This link expires in 24 hours.
-//         </p>
-//       </div>
-//     `,
-//   });
-//   console.log("Email sent:", info.messageId);
-// };
 const sendVerificationEmail = async (subscriber) => {
   const confirmUrl = `${process.env.CLIENT_URL}/confirm/${subscriber.confirmToken}`;
 
-  try {
-    const info = await transporter.sendMail({
-      from: FROM,
-      to: subscriber.email,
-      subject: "Confirm your Blogbase subscription",
-      html: `<div style="font-family: sans-serif; max-width: 600px; margin: auto; padding: 32px;">
+  const { data, error } = await resend.emails.send({
+    from: FROM,
+    to: subscriber.email,
+    subject: 'Confirm your Blogbase subscription',
+    html: `
+      <div style="font-family: sans-serif; max-width: 600px; margin: auto; padding: 32px;">
         <h2 style="color: #111; font-size: 24px; margin-bottom: 8px;">
           Confirm your subscription
         </h2>
@@ -82,26 +33,28 @@ const sendVerificationEmail = async (subscriber) => {
           font-size: 14px;
         ">Confirm Subscription</a>
         <p style="color: #999; font-size: 12px; margin-top: 32px;">
-          If you didn't subscribe to Blogbase, you can safely ignore this email.
-          This link expires in 24 hours.
+          If you did not subscribe to Blogbase, you can safely ignore this email.
         </p>
       </div>
-    `, // keep existing html
-    });
-    console.log("Email sent:", info.messageId);
-  } catch (err) {
-    console.error("Email error full details:", err);
-    throw err;
+    `,
+  });
+
+  if (error) {
+    console.error('Verification email error:', error);
+    throw new Error(error.message);
   }
+
+  console.log('Verification email sent:', data?.id);
 };
+
 // ─── Welcome Email ────────────────────────────────────────────────────────────
 const sendWelcomeEmail = async (subscriber) => {
   const unsubscribeUrl = `${process.env.CLIENT_URL}/unsubscribe/${subscriber.unsubscribeToken}`;
 
-  await transporter.sendMail({
+  const { error } = await resend.emails.send({
     from: FROM,
     to: subscriber.email,
-    subject: "Welcome to Blogbase!",
+    subject: 'Welcome to Blogbase!',
     html: `
       <div style="font-family: sans-serif; max-width: 600px; margin: auto; padding: 32px;">
         <h2 style="color: #111; font-size: 24px; margin-bottom: 8px;">
@@ -133,16 +86,19 @@ const sendWelcomeEmail = async (subscriber) => {
       </div>
     `,
   });
+
+  if (error) {
+    console.error('Welcome email error:', error);
+  }
 };
 
 // ─── New Article Notification ─────────────────────────────────────────────────
 const notifySubscribers = async (article) => {
-  // Only notify confirmed active subscribers
   const subscribers = await Subscriber.find({
     tags: article.tag._id,
     isActive: true,
     confirmedAt: { $ne: null },
-  }).select("email displayName unsubscribeToken");
+  }).select('email displayName unsubscribeToken');
 
   if (subscribers.length === 0) return;
 
@@ -151,7 +107,7 @@ const notifySubscribers = async (article) => {
   const emailPromises = subscribers.map((sub) => {
     const unsubscribeUrl = `${process.env.CLIENT_URL}/unsubscribe/${sub.unsubscribeToken}`;
 
-    return transporter.sendMail({
+    return resend.emails.send({
       from: FROM,
       to: sub.email,
       subject: `New article: ${article.title}`,
@@ -164,7 +120,7 @@ const notifySubscribers = async (article) => {
             ${article.title}
           </h2>
           <p style="color: #666; margin-bottom: 24px;">
-            ${article.excerpt || ""}
+            ${article.excerpt || ''}
           </p>
           <a href="${articleUrl}" style="
             display: inline-block;
@@ -188,9 +144,7 @@ const notifySubscribers = async (article) => {
   });
 
   await Promise.allSettled(emailPromises);
-  console.log(
-    `Notified ${subscribers.length} subscriber(s) about: "${article.title}"`,
-  );
+  console.log(`Notified ${subscribers.length} subscriber(s) about: "${article.title}"`);
 };
 
 module.exports = { sendVerificationEmail, sendWelcomeEmail, notifySubscribers };
