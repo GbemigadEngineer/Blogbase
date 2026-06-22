@@ -14,17 +14,20 @@ const login = async (req, res, next) => {
     const { username, password } = req.body;
 
     if (!username || !password) {
-      return res
-        .status(400)
-        .json({
-          success: false,
-          message: "Username and password are required",
-        });
+      return res.status(400).json({
+        success: false,
+        message: "Username and password are required",
+      });
     }
 
     const admin = await Admin.findOne({
       username: username.toLowerCase(),
     }).select("+password");
+    console.log("Admin found:", admin ? "yes" : "no");
+    console.log(
+      "Password compare:",
+      admin ? await admin.comparePassword(password) : "no admin",
+    );
 
     if (!admin || !(await admin.comparePassword(password))) {
       return res
