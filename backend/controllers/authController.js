@@ -23,12 +23,6 @@ const login = async (req, res, next) => {
     const admin = await Admin.findOne({
       username: username.toLowerCase(),
     }).select("+password");
-    console.log("Admin found:", admin ? "yes" : "no");
-    console.log(
-      "Password compare:",
-      admin ? await admin.comparePassword(password) : "no admin",
-    );
-
     if (!admin || !(await admin.comparePassword(password))) {
       return res
         .status(401)

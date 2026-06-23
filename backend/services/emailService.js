@@ -144,7 +144,7 @@ const notifySubscribers = async (article) => {
   });
 
   await Promise.allSettled(emailPromises);
-  console.log(`Notified ${subscribers.length} subscriber(s) about: "${article.title}"`);
+ 
 };
 
 module.exports = { sendVerificationEmail, sendWelcomeEmail, notifySubscribers };
