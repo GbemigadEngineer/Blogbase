@@ -26,6 +26,12 @@ const Footer = () => {
             >
               Subscribe
             </Link>
+            <Link
+              to="/about"
+              className="text-sm font-semibold text-gray-500 dark:text-gray-400 hover:text-pink-500 dark:hover:text-pink-400 transition-colors"
+            >
+              About
+            </Link>
             <a
               href="https://twitter.com"
               target="_blank"
