@@ -33,6 +33,12 @@ const Navbar = () => {
             >
               Subscribe
             </Link>
+            <Link
+              to="/about"
+              className="text-sm font-semibold text-gray-700 dark:text-gray-300 hover:text-pink-500 dark:hover:text-pink-400 transition-colors"
+            >
+              About
+            </Link>
             <button
               onClick={toggleTheme}
               className="p-2 rounded-full bg-pink-50 dark:bg-gray-800 text-pink-500 dark:text-pink-400 hover:bg-pink-100 dark:hover:bg-gray-700 transition-colors"
@@ -74,6 +80,13 @@ const Navbar = () => {
               className="text-sm font-semibold text-gray-700 dark:text-gray-300 hover:text-pink-500"
             >
               Subscribe
+            </Link>
+            <Link
+              to="/about"
+              onClick={() => setMenuOpen(false)}
+              className="text-sm font-semibold text-gray-700 dark:text-gray-300 hover:text-pink-500"
+            >
+              About
             </Link>
           </div>
         )}
