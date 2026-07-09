@@ -27,8 +27,8 @@ const AboutPage = () => {
         </p>
 
         <p>
-          What it is — is a personal corner of the internet where I write about
-          things I actually care about. Sports, football, politics, life in
+          What it is, is a personal corner of the internet where I write about
+          things I actually care about. Football, politics, philosophy, life in
           Nigeria, opinions I have been sitting on for too long. When I feel
           like writing, I write. When I do not, I do not. Simple as that.
         </p>
@@ -40,7 +40,7 @@ const AboutPage = () => {
         </div>
 
         <p>
-          The idea for Blogbase came from a simple frustration — I had opinions
+          The idea for Blogbase came from a simple frustration, I had opinions
           and nowhere intentional to put them. Social media felt too noisy, too
           performative. I wanted a space that was mine. So I built one.
         </p>
@@ -54,8 +54,10 @@ const AboutPage = () => {
 
         <p>
           If something I write resonates with you, I am glad. If it does not,
-          that is fine too. This was never about building an audience — it just
-          turned out that way.
+          that is fine too. Give it a like or a dislike, your honest reaction is
+          always welcome. You do not need to subscribe to like or dislike an
+          article. Subscribing is only required if you want to join the
+          conversation and leave a comment.
         </p>
       </div>
 
@@ -70,7 +72,7 @@ const AboutPage = () => {
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           {[
             {
-              tag: "Sports",
+              tag: "Football",
               desc: "Match reactions, hot takes, and football opinions nobody asked for.",
             },
             {
@@ -84,6 +86,10 @@ const AboutPage = () => {
             {
               tag: "Nigerian Politics",
               desc: "The chaos, the comedy, and the occasional hope of Nigerian politics.",
+            },
+            {
+              tag: "Philosophy",
+              desc: "Thoughts on life, meaning, and the questions worth sitting with.",
             },
           ].map((item) => (
             <div
@@ -107,8 +113,9 @@ const AboutPage = () => {
           Stay in the loop
         </h3>
         <p className="text-gray-500 dark:text-gray-400 text-sm mb-6">
-          Subscribe to get notified when new articles drop. No spam, just
-          articles — when they happen.
+          Subscribe to get notified when new articles drop and to join the
+          conversation in the comments. No spam, just articles, when they
+          happen.
         </p>
         <Link
           to="/subscribe"
