@@ -1,0 +1,25 @@
+{
+  "name": "blogbase-dev",
+  "image": "mcr.microsoft.com/devcontainers/javascript-node:1-22-bookworm",
+
+  "forwardPorts": [5000, 5173],
+  "portsAttributes": {
+    "5000": { "label": "Backend (Express)", "onAutoForward": "notify" },
+    "5173": { "label": "Frontend (Vite)", "onAutoForward": "openPreview" }
+  },
+
+  "postCreateCommand": "cd backend && npm install && cd ../frontend && npm install",
+
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "dbaeumer.vscode-eslint",
+        "esbenp.prettier-vscode",
+        "mongodb.mongodb-vscode",
+        "christian-kohler.npm-intellisense"
+      ]
+    }
+  },
+
+  "remoteUser": "node"
+}
